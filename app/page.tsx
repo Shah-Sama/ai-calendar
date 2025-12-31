@@ -1,4 +1,5 @@
 import Calendar from "./components/Calendar";
+import AIInput from "./components/AItext";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
           My Calendar
         </h1>
         <Calendar />
+        <AIInput />
       </main>
     </div>
   );
