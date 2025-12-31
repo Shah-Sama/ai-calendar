@@ -1,28 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventInput } from "@fullcalendar/core";
 
 export default function Calendar() {
-  const today = new Date().toISOString().slice(0, 10);
+  const [events, setEvents] = useState<EventInput[]>([]);
 
-  const [events, setEvents] = useState<EventInput[]>([
-    {
-      id: "1",
-      title: "Study",
-      start: `${today}T10:00:00`,
-      end: `${today}T12:00:00`,
-    },
-    {
-      id: "2",
-      title: "Gym",
-      start: `${today}T18:00:00`,
-      end: `${today}T19:30:00`,
-    },
-  ]);
+  /**
+   * Load events from Supabase on page load
+   */
+  useEffect(() => {
+    fetch("/api")
+      .then((res) => res.json())
+      .then((data) => {
+        setEvents(
+          data.map((e: any) => ({
+            id: e.id,
+            title: e.title,
+            start: e.start_time,
+            end: e.end_time,
+          }))
+        );
+      });
+  }, []);
 
   return (
     <FullCalendar
@@ -34,54 +37,69 @@ export default function Calendar() {
       height="auto"
       events={events}
 
-      select={(info) => {
+      /**
+       * Create a new event (persisted)
+       */
+      select={async (info) => {
         const title = prompt("Task name?");
         if (!title) return;
+
+        const res = await fetch("/api", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title,
+            start: info.start,
+            end: info.end,
+          }),
+        });
+
+        const saved = await res.json();
 
         setEvents((prev) => [
           ...prev,
           {
-            id: crypto.randomUUID(),
-            title,
-            start: info.start,
-            end: info.end,
+            id: saved.id,
+            title: saved.title,
+            start: saved.start_time,
+            end: saved.end_time,
           },
         ]);
       }}
 
-      eventDrop={(info) => {
+      /**
+       * Persist drag (move) updates
+       */
+      eventDrop={async (info) => {
         if (!info.event.start || !info.event.end) return;
-      
-        setEvents((prev) =>
-          prev.map((event) =>
-            event.id === info.event.id
-              ? {
-                  ...event,
-                  start: info.event.start!,
-                  end: info.event.end!,
-                }
-              : event
-          )
-        );
-      }}
-      
 
-      eventResize={(info) => {
-        if (!info.event.start || !info.event.end) return;
-      
-        setEvents((prev) =>
-          prev.map((event) =>
-            event.id === info.event.id
-              ? {
-                  ...event,
-                  start: info.event.start!,
-                  end: info.event.end!,
-                }
-              : event
-          )
-        );
+        await fetch("/api", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: info.event.id,
+            start: info.event.start,
+            end: info.event.end,
+          }),
+        });
       }}
-      
+
+      /**
+       * Persist resize updates
+       */
+      eventResize={async (info) => {
+        if (!info.event.start || !info.event.end) return;
+
+        await fetch("/api", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: info.event.id,
+            start: info.event.start,
+            end: info.event.end,
+          }),
+        });
+      }}
     />
   );
 }
