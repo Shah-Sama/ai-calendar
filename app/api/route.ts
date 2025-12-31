@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "../lib/supabase";
 
-
 /**
  * GET /api
  * Fetch all calendar events
