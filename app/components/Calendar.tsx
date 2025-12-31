@@ -84,6 +84,25 @@ export default function Calendar() {
         });
       }}
 
+      eventClick={async (info) => {
+        const confirmed = confirm(`Delete "${info.event.title}"?`);
+        if (!confirmed) return;
+      
+        await fetch("/api", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: info.event.id,
+          }),
+        });
+      
+        // Remove from UI immediately
+        setEvents((prev) =>
+          prev.filter((event) => event.id !== info.event.id)
+        );
+      }}
+      
+
       /**
        * Persist resize updates
        */

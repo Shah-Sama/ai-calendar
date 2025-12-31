@@ -72,3 +72,26 @@ export async function PUT(req: Request) {
 
   return NextResponse.json({ success: true });
 }
+
+/**
+ * DELETE /api
+ * Delete an event by id
+ */
+export async function DELETE(req: Request) {
+    const body = await req.json();
+  
+    const { error } = await supabase
+      .from("events")
+      .delete()
+      .eq("id", body.id);
+  
+    if (error) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+  
+    return NextResponse.json({ success: true });
+  }
+  
