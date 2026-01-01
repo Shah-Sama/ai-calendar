@@ -32,6 +32,7 @@ export default function Calendar() {
       plugins={[timeGridPlugin, interactionPlugin]}
       initialView="timeGridDay"
       editable
+      timeZone="local"
       selectable
       nowIndicator
       height="auto"

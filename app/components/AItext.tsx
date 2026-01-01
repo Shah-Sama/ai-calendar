@@ -4,31 +4,36 @@ import { useState } from "react";
 
 export default function AIInput() {
   const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
 
   const askAI = async () => {
     if (!input) return;
-
+  
     setLoading(true);
-
-    const res = await fetch("/api/ai", {
+  
+    await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: input }),
+      body: JSON.stringify({
+        prompt: input,
+        date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
+      }),
     });
-
-    const data = await res.json();
-    setResponse(data.reply);
+  
     setLoading(false);
+  
+    // Refresh calendar
+    window.location.reload();
   };
-
+  
+  
   return (
     <div className="space-y-2">
       <textarea
         className="w-full rounded border p-2"
         rows={3}
-        placeholder="Ask AI to plan your day..."
+        placeholder="Tell AI your tasks (e.g. 'I have class 9–12, gym, and 3 hours of study')"
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
@@ -38,12 +43,12 @@ export default function AIInput() {
         className="rounded bg-black px-4 py-2 text-white"
         disabled={loading}
       >
-        {loading ? "Thinking..." : "Ask AI"}
+        {loading ? "Planning..." : "Fill My Calendar"}
       </button>
 
-      {response && (
-        <div className="rounded bg-zinc-100 p-3 text-sm">
-          {response}
+      {status && (
+        <div className="text-sm text-zinc-600">
+          {status}
         </div>
       )}
     </div>
