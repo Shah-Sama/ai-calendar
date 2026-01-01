@@ -67,14 +67,23 @@ Rules:
     if (!Array.isArray(parsed.events)) {
       throw new Error("Invalid AI response structure");
     }
+    function localToUTC(dateTime: string) {
+      // dateTime like "2026-01-01T19:00:00"
+      const local = new Date(dateTime);
+      return local.toISOString(); // converts to UTC with Z
+    }
+    
+
+    
 
     const { error } = await supabase.from("events").insert(
       parsed.events.map((e: any) => ({
         title: e.title,
-        start_time: e.start,
-        end_time: e.end,
+        start_time: localToUTC(e.start),
+        end_time: localToUTC(e.end),
       }))
     );
+    
 
     if (error) throw error;
 
